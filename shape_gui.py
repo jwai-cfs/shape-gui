@@ -40,11 +40,7 @@ class App:
         # add plot axes
         plot_frame = tk.Frame(tab1)
         plot_frame.pack(side='left', anchor='nw', padx=10)
-        self.add_plot_axes(plot_frame)
-
-        # plot limiter
-        for i in range(len(self.axs)):
-            self.plot_limiter(self.axs[i])      
+        self.add_plot_axes(plot_frame)    
 
         # plot shape
         self.plot_new_bry()
@@ -52,11 +48,11 @@ class App:
 
     def add_segs_panel(self, parent):
          
-        # panel to hold shape parameter widgets
+        # panel to hold segment parameter widgets
         panel = tk.LabelFrame(parent, text='Control segments', highlightbackground="gray", highlightthickness=2)
         panel.pack(side='left', anchor='nw', padx=10, pady=10)
         
-        # initialize shape parameters
+        # initialize segment parameters
         seg_keys = ['nsegs', 'seglength', 'theta0', 'rc', 'zc', 'a', 'b']
         seg_key_labels = ['# segs', 'seg_length', 'theta0', 'ellipse_r0', 'ellipse_z0', 'ellipse_a', 'ellipse_b']
 
@@ -69,7 +65,7 @@ class App:
         self.seg_params['nsegs']     = tk.StringVar(value='40')
         self.seg_params['theta0']    = tk.StringVar(value='0')
         
-        # assign widgets for each shape parameter
+        # assign widgets for each segment parameter
         for i, (key, key_label) in enumerate(zip(seg_keys, seg_key_labels)):
             label = tk.Label(panel, text=key_label)
             label.grid(row=i, column=1)
@@ -312,13 +308,7 @@ class App:
         DESCRIPTION:                
         """        
         # convert values form Tk-formatted shape_params to a normal python dict
-        s = {}
-        for key in self.shape_params.keys():
-            dum = self.shape_params[key].get()
-            try:
-                s[key] = float(dum)   # convert to numeric
-            except:
-                s[key] = np.nan
+        s = self.tkdict2dict(self.shape_params)
 
         # create boundary shape from params
         [rb, zb] = shape_create_deadstart(s)
