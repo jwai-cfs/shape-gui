@@ -4,7 +4,7 @@ from functools import partial
 from matplotlib.figure import Figure 
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk) 
 import matplotlib.pyplot as plt
-from shape_callbacks import shape_create_deadstart
+from shape_callbacks import shape_create_deadstart, interparc
 import numpy as np
 
 class App:
@@ -35,6 +35,7 @@ class App:
         self.shape_params = {}
         self.add_shape_params_panel(tab1)
         self.add_shape_points_panel(tab1)
+        self.add_segs_panel(tab1)
 
         # add plot axes
         plot_frame = tk.Frame(tab1)
@@ -47,6 +48,107 @@ class App:
 
         # plot shape
         self.plot_new_bry()
+
+
+    def add_segs_panel(self, parent):
+         
+        # panel to hold shape parameter widgets
+        panel = tk.LabelFrame(parent, text='Control segments', highlightbackground="gray", highlightthickness=2)
+        panel.pack(side='left', anchor='nw', padx=10, pady=10)
+        
+        # initialize shape parameters
+        seg_keys = ['nsegs', 'seglength', 'theta0', 'rc', 'zc', 'a', 'b']
+        seg_key_labels = ['# segs', 'seg_length', 'theta0', 'ellipse_r0', 'ellipse_z0', 'ellipse_a', 'ellipse_b']
+
+        self.seg_params = {}
+        self.seg_params['rc']        = tk.StringVar(value='1.75')
+        self.seg_params['zc']        = tk.StringVar(value='0')
+        self.seg_params['a']         = tk.StringVar(value='0.15')
+        self.seg_params['b']         = tk.StringVar(value='0.2')
+        self.seg_params['seglength'] = tk.StringVar(value='6')
+        self.seg_params['nsegs']     = tk.StringVar(value='40')
+        self.seg_params['theta0']    = tk.StringVar(value='0')
+        
+        # assign widgets for each shape parameter
+        for i, (key, key_label) in enumerate(zip(seg_keys, seg_key_labels)):
+            label = tk.Label(panel, text=key_label)
+            label.grid(row=i, column=1)
+            entry = tk.Entry(panel, bd=5, width=10, textvariable=self.seg_params[key])                
+            entry.bind('<Return>', self.plot_new_bry)                                    
+            entry.grid(row=i, column=3)
+        
+        # manual control segments
+        rowstart = i
+        label = tk.Label(panel, text='\n\nManual control segments')
+        label.grid(row=rowstart+1, column=1, columnspan=2)
+        for (i,text) in enumerate(['R0', 'Z0', 'Rf', 'Zf']):
+            label = tk.Label(panel, text=text)
+            label.grid(row=rowstart+2, column=i)
+
+        rowstart += 3
+        self.seg_params['n_manual_segs'] = 8
+        for i in range(self.seg_params['n_manual_segs']):
+            keys = [f'seg{i}_R0', f'seg{i}_Z0', f'seg{i}_Rf', f'seg{i}_Zf']
+
+            for (col, key) in enumerate(keys):
+                self.seg_params[key] = tk.StringVar(value='nan')
+                entry = tk.Entry(panel, bd=5, width=3, textvariable=self.seg_params[key])        
+                entry.bind('<Return>', self.plot_new_bry)                                    
+                entry.grid(row=rowstart+i, column=col)
+        
+
+    def tkdict2dict(self, tkdict):
+        d = {}
+        for key in tkdict.keys():
+            try:
+                dum = tkdict[key].get()
+                d[key] = float(dum)   # convert to numeric if possible
+            except:
+                d[key] = np.nan       # otherwise, nan
+        return d
+    
+    def gen_segs(self):
+        p = self.tkdict2dict(self.seg_params)
+        th = np.linspace(0, 2*np.pi, 200) + p['theta0']
+
+        rin = p['rc'] + p['a'] * np.cos(th)
+        zin = p['zc'] + p['b'] * np.sin(th)
+        rout = p['rc'] + p['seglength'] * p['a'] * np.cos(th)
+        zout = p['zc'] + p['seglength'] * p['b'] * np.sin(th)
+        
+        rout, zout = interparc(rout, zout, int(p['nsegs']))
+        idx = []
+        for (ro,zo) in zip(rout,zout):
+            dist2 = (rin-ro)**2 + (zin-zo)**2
+            idx.append(np.argmin(dist2))
+        
+        idx = np.asarray(idx)
+        segs = np.vstack((rin[idx], zin[idx], rout, zout)).T
+
+        return segs
+
+    def plot_segs(self, ax):
+
+        # plot manual segs
+        n = self.seg_params['n_manual_segs']
+        segs = np.empty((n,4))
+        for i in range(n):
+            keys = [f'seg{i}_R0', f'seg{i}_Z0', f'seg{i}_Rf', f'seg{i}_Zf']
+            for j, key in enumerate(keys):
+                dum = self.seg_params[key].get()
+                try:
+                    segs[i,j] = float(dum)   # convert to numeric if possible
+                except:
+                    segs[i,j] = np.nan       # otherwise, nan
+
+        ax.plot(segs[:,[0,2]].T, segs[:,[1,3]].T, c='gray', linewidth=0.5)
+
+        # plot parametrized segs
+        segs2 = self.gen_segs()
+        ax.plot(segs2[:,[0,2]].T, segs2[:,[1,3]].T, c='gray', linewidth=0.5)
+                         
+  
+
 
     def plot_limiter(self, ax):
         rl = [1.26900, 1.26900, 1.26400, 1.43320, 1.38590, 1.38510, 1.29490, 1.32000, 1.44070, 1.44070, 1.50930, 1.57080, 1.57000, 1.72000, 1.72000, 1.84000, 1.84000, 1.69500, 1.65850, 1.65750, 1.64490, 1.84000, 2.03000, 2.03003, 2.08782, 2.13957, 2.18574, 2.22676, 2.26302, 2.30393, 2.33804, 2.36602, 2.38980, 2.40771, 2.42020, 2.42757, 2.43000, 2.42757, 2.42020, 2.40771, 2.38980, 2.36602, 2.33804, 2.30393, 2.26302, 2.22676, 2.18574, 2.13957, 2.08782, 2.03003, 2.03000, 1.84000, 1.64490, 1.65750, 1.65850, 1.69500, 1.84000, 1.84000, 1.72000, 1.72000, 1.57000, 1.57080, 1.50930, 1.44070, 1.44070, 1.32000, 1.29490, 1.38510, 1.38590, 1.43320, 1.26400, 1.26900, 1.26900]
@@ -145,7 +247,7 @@ class App:
         """        
 
         # panel to hold shape parameter widgets
-        shp_frame = tk.LabelFrame(parent, text='Points', highlightbackground="gray", highlightthickness=2)
+        shp_frame = tk.LabelFrame(parent, text='Manual points', highlightbackground="gray", highlightthickness=2)
         shp_frame.pack(side='left', anchor='nw', padx=10, pady=10)
 
         # Add entries for individual (r,z) points
@@ -243,6 +345,7 @@ class App:
                 zkey = 'zx' + str(k+1)
                 ax.scatter(s[rkey], s[zkey], s=50, c='red', alpha=1, marker='x')
 
+            self.plot_segs(ax)
 
         self.canvas.draw()                       
   
