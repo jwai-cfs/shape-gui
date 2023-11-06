@@ -31,12 +31,14 @@ class App:
         notebook.add(tab2, text='tab2')
         notebook.pack(expand=1, fill='both')
 
-        # add the panel for shape parameters
+        # add panels for shape parameter inputs
+        self.shape_params = {}
         self.add_shape_params_panel(tab1)
+        self.add_shape_points_panel(tab1)
 
         # add plot axes
         plot_frame = tk.Frame(tab1)
-        plot_frame.pack(side='left', anchor='nw', padx=20)
+        plot_frame.pack(side='left', anchor='nw', padx=10)
         self.add_plot_axes(plot_frame)
 
         # plot limiter
@@ -101,8 +103,8 @@ class App:
         """        
 
         # panel to hold shape parameter widgets
-        shp_frame = tk.Frame(parent, highlightbackground="gray", highlightthickness=1)
-        shp_frame.pack(side='left', anchor='nw')
+        shp_frame = tk.LabelFrame(parent, text='Shape parameters', highlightbackground="gray", highlightthickness=2)
+        shp_frame.pack(side='left', anchor='nw', padx=10, pady=10)
             
         # initialize shape parameters
         shape_keys = ['R0','Z0','a','k','triu','tril','squo','squi','sqlo','sqli','c_xplo','c_xpup']
@@ -110,8 +112,6 @@ class App:
                            'Squareness up/out', 'Squareness up/in', 'Squareness lo/out', 'Squareness lo/in', 'Xpt_coeff lower', 
                            'Xpt_coeff upper']
         
-              
-        self.shape_params = {}
         self.shape_params['R0']   = tk.StringVar(value='1.8451')
         self.shape_params['Z0']   = tk.StringVar(value='0.0')
         self.shape_params['a']    = tk.StringVar(value='0.5631')
@@ -138,7 +138,28 @@ class App:
             entry.bind('<Return>', self.plot_new_bry)                                    
             entry.grid(row=i, column=3)
 
+    def add_shape_points_panel(self, parent):
+        """
+        METHOD: add_shape_params_panel
+        DESCRIPTION:                
+        """        
+
+        # panel to hold shape parameter widgets
+        shp_frame = tk.LabelFrame(parent, text='Points', highlightbackground="gray", highlightthickness=2)
+        shp_frame.pack(side='left', anchor='nw', padx=10, pady=10)
+
         # Add entries for individual (r,z) points
+        # x-points
+        self.shape_params['rx1'] = tk.StringVar(value='1.513')
+        self.shape_params['zx1'] = tk.StringVar(value='1.144')
+        self.shape_params['rx2'] = tk.StringVar(value='1.513')
+        self.shape_params['zx2'] = tk.StringVar(value='-1.144')
+        self.shape_params['rx3'] = tk.StringVar(value='nan')
+        self.shape_params['zx3'] = tk.StringVar(value='nan')
+        self.shape_params['rx4'] = tk.StringVar(value='nan')
+        self.shape_params['zx4'] = tk.StringVar(value='nan')
+
+        # general control points
         self.shape_params['r1'] = tk.StringVar(value='1.32')
         self.shape_params['z1'] = tk.StringVar(value='1.21')
         self.shape_params['r2'] = tk.StringVar(value='1.32')
@@ -155,32 +176,32 @@ class App:
         self.shape_params['z7'] = tk.StringVar(value='nan')
         self.shape_params['r8'] = tk.StringVar(value='nan')
         self.shape_params['z8'] = tk.StringVar(value='nan')
+        
 
-        n = i+1
-        for i in range(8):
+        rkeys = ['rx' + str(i+1) for i in range(4)] + ['r' + str(i+1) for i in range(8)] 
+        zkeys = ['zx' + str(i+1) for i in range(4)] + ['z' + str(i+1) for i in range(8)]
 
-            rkey = 'r' + str(i+1)
-            zkey = 'z' + str(i+1)
+        for i, (rkey, zkey) in enumerate(zip(rkeys, zkeys)):
 
             label = tk.Label(shp_frame, text=rkey)
-            label.grid(row=i+n, column=1)
+            label.grid(row=i, column=1)
 
             entry = tk.Entry(shp_frame, 
                                 bd=5, 
                                 width=4, 
                                 textvariable=self.shape_params[rkey])                
             entry.bind('<Return>', self.plot_new_bry)                                    
-            entry.grid(row=i+n, column=2)
+            entry.grid(row=i, column=2)
 
             label = tk.Label(shp_frame, text=zkey)
-            label.grid(row=i+n, column=3)
+            label.grid(row=i, column=3)
 
             entry = tk.Entry(shp_frame, 
                                 bd=5, 
                                 width=4, 
                                 textvariable=self.shape_params[zkey])                
             entry.bind('<Return>', self.plot_new_bry)                                    
-            entry.grid(row=i+n, column=4)
+            entry.grid(row=i, column=4)
 
             
     def plot_new_bry(self, event=None):
@@ -216,6 +237,12 @@ class App:
                 rkey = 'r' + str(k+1)
                 zkey = 'z' + str(k+1)
                 ax.scatter(s[rkey], s[zkey], s=30, c='red', alpha=1, marker='d')
+
+            for k in range(4):
+                rkey = 'rx' + str(k+1)
+                zkey = 'zx' + str(k+1)
+                ax.scatter(s[rkey], s[zkey], s=50, c='red', alpha=1, marker='x')
+
 
         self.canvas.draw()                       
   
