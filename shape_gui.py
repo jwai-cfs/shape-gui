@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from shape_callbacks import shape_create_deadstart, interparc
 from intersections import intersection
 import numpy as np
+import json
 
 class App:
     """
@@ -340,7 +341,7 @@ class App:
         ws = self.root.winfo_screenwidth()  # width of the screen
         hs = self.root.winfo_screenheight() # height of the screen   
         x = (ws/2) - (w/2)                  # calculate x and y coordinates for the window
-        y = (hs/2) - (h/2)    
+        y = (hs/2.4) - (h/2)    
         self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))              
 
     def update_plots(self, event=None):
@@ -386,6 +387,13 @@ class App:
             
         self.canvas.draw()                 
 
+    def save_file(self, d):
+        f = tk.filedialog.asksaveasfile(initialfile='shape#.json', defaultextension='.json',
+                                        filetypes=[("All Files","*.*"),("Text Documents","*.txt")])                
+        
+        json.dumps(d)
+        f.write(json.dumps(d, indent=4))
+
     def save_shape(self, event=None):
                 
         s = self.tkdict2dict(self.shape_params)         # convert values form Tk-formatted shape_params to a normal python dict    
@@ -393,14 +401,14 @@ class App:
         segs = self.get_segs()                          # get control segments
         rcp, zcp = self.seg_intersections(segs, rb, zb) # get control points
 
-        # put everthing in dict        
-        s['rb'] = rb
-        s['zb'] = zb
-        s['segs'] = segs
-        s['rcp'] = rcp
-        s['zcp'] = zcp
+        # # put everthing in dict        
+        s['rb'] = rb.tolist()
+        s['zb'] = zb.tolist()
+        s['segs'] = segs.tolist()
+        s['rcp'] = rcp.tolist()
+        s['zcp'] = zcp.tolist()
         
-        print(s.keys())
+        self.save_file(s)        
 
 def main():     
     app = App()
