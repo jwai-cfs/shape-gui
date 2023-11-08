@@ -32,6 +32,10 @@ class App:
         notebook.add(tab2, text='tab2')
         notebook.pack(expand=1, fill='both')
 
+        # save shape button
+        B = tk.Button(tab1, text='Save Shape', command=self.save_shape)
+        B.pack(side='bottom', anchor='sw', padx=10, pady=10)
+        
         # add panels for shape parameter inputs
         self.shape_params = {}
         self.add_shape_params_panel(tab1)
@@ -312,8 +316,33 @@ class App:
                 rcp[i] = r_[0]
                 zcp[i] = z_[0]
 
-        return rcp, zcp
+        return rcp, zcp                
+
+    def set_entry_text(self, entry, text):
+        """
+        METHOD: set_entry_text
+        DESCRIPTION:                
+        """                
+        entry.delete('0', 'end')
+        entry.insert('0', text)
+
+
+    def define_root_window(self):
+        """
+        METHOD: define_root_window
+        DESCRIPTION:                
+        """                
+        self.root.title('Shape Editor')              
         
+        # center the window when opened
+        w = 1400                            # width for the root window
+        h = 800                             # height for the root window
+        ws = self.root.winfo_screenwidth()  # width of the screen
+        hs = self.root.winfo_screenheight() # height of the screen   
+        x = (ws/2) - (w/2)                  # calculate x and y coordinates for the window
+        y = (hs/2) - (h/2)    
+        self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))              
+
     def update_plots(self, event=None):
         """
         METHOD: update_plots
@@ -343,7 +372,7 @@ class App:
             for k in range(8):
                 rkey = 'r' + str(k+1)
                 zkey = 'z' + str(k+1)
-                ax.scatter(s[rkey], s[zkey], s=30, c='red', alpha=1, marker='d')
+                ax.scatter(s[rkey], s[zkey], s=15, c='blue', alpha=1, marker='o')
 
             # plot x-points
             for k in range(4):
@@ -351,38 +380,27 @@ class App:
                 zkey = 'zx' + str(k+1)
                 ax.scatter(s[rkey], s[zkey], s=50, c='red', alpha=1, marker='x')
             
-            # plot segment control points
-            ax.scatter(rcp, zcp, s=10, c='blue', alpha=1, marker='.')
-
+            # plot control segments and points
+            ax.scatter(rcp, zcp, s=15, c='blue', alpha=1, marker='.')
             ax.plot(segs[:,[0,2]].T, segs[:,[1,3]].T, c='blue', alpha=0.3, linewidth=0.5)        
             
-        self.canvas.draw()                       
-  
+        self.canvas.draw()                 
 
-    def set_entry_text(self, entry, text):
-        """
-        METHOD: set_entry_text
-        DESCRIPTION:                
-        """                
-        entry.delete('0', 'end')
-        entry.insert('0', text)
+    def save_shape(self, event=None):
+                
+        s = self.tkdict2dict(self.shape_params)         # convert values form Tk-formatted shape_params to a normal python dict    
+        rb, zb = shape_create_deadstart(s)              # create boundary shape from params
+        segs = self.get_segs()                          # get control segments
+        rcp, zcp = self.seg_intersections(segs, rb, zb) # get control points
 
-
-    def define_root_window(self):
-        """
-        METHOD: define_root_window
-        DESCRIPTION:                
-        """                
-        self.root.title('Shape Editor')              
+        # put everthing in dict        
+        s['rb'] = rb
+        s['zb'] = zb
+        s['segs'] = segs
+        s['rcp'] = rcp
+        s['zcp'] = zcp
         
-        # center the window when opened
-        w = 1400                            # width for the root window
-        h = 800                             # height for the root window
-        ws = self.root.winfo_screenwidth()  # width of the screen
-        hs = self.root.winfo_screenheight() # height of the screen   
-        x = (ws/2) - (w/2)                  # calculate x and y coordinates for the window
-        y = (hs/2) - (h/2)    
-        self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))              
+        print(s.keys())
 
 def main():     
     app = App()
