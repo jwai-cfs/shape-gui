@@ -401,7 +401,14 @@ class App:
         segs = self.get_segs()                          # get control segments
         rcp, zcp = self.seg_intersections(segs, rb, zb) # get control points
 
-        # # put everthing in dict        
+        # # add manually-defined (r,z) points to (rcp,zcp)
+        # for k in range(8):
+        #     rkey = 'r' + str(k+1)
+        #     zkey = 'z' + str(k+1)
+        #     rcp = np.append(rcp, s[rkey])
+        #     zcp = np.append(zcp, s[zkey])
+        
+        # put everthing in dict        
         s['rb'] = rb.tolist()
         s['zb'] = zb.tolist()
         s['segs'] = segs.tolist()
@@ -410,7 +417,8 @@ class App:
         s['rl'] = self.rl
         s['zl'] = self.zl
         
-        self.save_file(s)        
+        self.save_file(s)      
+        print('shape saved to file')  
 
 def main():     
     app = App()
