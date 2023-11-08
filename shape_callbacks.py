@@ -33,9 +33,9 @@ def shape_create_deadstart(s):
     s = shape_analysis(r,z)
 
     # interpolate and sort
-    r, z = interparc(r, z, 500, mergeit=False, forceloop=False)
     r, z = sort_ccw(r, z)
-
+    r, z = interparc(r, z, 500, mergeit=False, forceloop=True)
+    
     return r, z
 
 

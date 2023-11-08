@@ -5,6 +5,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk) 
 import matplotlib.pyplot as plt
 from shape_callbacks import shape_create_deadstart, interparc
+from intersections import intersection
 import numpy as np
 
 class App:
@@ -43,7 +44,7 @@ class App:
         self.add_plot_axes(plot_frame)    
 
         # plot shape
-        self.plot_new_bry()
+        self.update_plots()
 
 
     def add_segs_panel(self, parent):
@@ -70,7 +71,7 @@ class App:
             label = tk.Label(panel, text=key_label)
             label.grid(row=i, column=1)
             entry = tk.Entry(panel, bd=5, width=10, textvariable=self.seg_params[key])                
-            entry.bind('<Return>', self.plot_new_bry)                                    
+            entry.bind('<Return>', self.update_plots)                                    
             entry.grid(row=i, column=3)
         
         # manual control segments
@@ -89,7 +90,7 @@ class App:
             for (col, key) in enumerate(keys):
                 self.seg_params[key] = tk.StringVar(value='nan')
                 entry = tk.Entry(panel, bd=5, width=3, textvariable=self.seg_params[key])        
-                entry.bind('<Return>', self.plot_new_bry)                                    
+                entry.bind('<Return>', self.update_plots)                                    
                 entry.grid(row=rowstart+i, column=col)
         
 
@@ -103,7 +104,22 @@ class App:
                 d[key] = np.nan       # otherwise, nan
         return d
     
-    def gen_segs(self):
+    def get_segs(self):
+
+        # manually-defined segs
+        n = self.seg_params['n_manual_segs']
+        mansegs = np.empty((n,4))
+        for i in range(n):
+            keys = [f'seg{i}_R0', f'seg{i}_Z0', f'seg{i}_Rf', f'seg{i}_Zf']
+            for j, key in enumerate(keys):
+                dum = self.seg_params[key].get()
+                try:
+                    mansegs[i,j] = float(dum)   # convert to numeric if possible
+                except:
+                    mansegs[i,j] = np.nan       # otherwise, nan
+
+
+        # parameterized segs
         p = self.tkdict2dict(self.seg_params)
         th = np.linspace(0, 2*np.pi, 200) + p['theta0']
 
@@ -121,30 +137,9 @@ class App:
         idx = np.asarray(idx)
         segs = np.vstack((rin[idx], zin[idx], rout, zout)).T
 
-        return segs
-
-    def plot_segs(self, ax):
-
-        # plot manual segs
-        n = self.seg_params['n_manual_segs']
-        segs = np.empty((n,4))
-        for i in range(n):
-            keys = [f'seg{i}_R0', f'seg{i}_Z0', f'seg{i}_Rf', f'seg{i}_Zf']
-            for j, key in enumerate(keys):
-                dum = self.seg_params[key].get()
-                try:
-                    segs[i,j] = float(dum)   # convert to numeric if possible
-                except:
-                    segs[i,j] = np.nan       # otherwise, nan
-
-        ax.plot(segs[:,[0,2]].T, segs[:,[1,3]].T, c='gray', linewidth=0.5)
-
-        # plot parametrized segs
-        segs2 = self.gen_segs()
-        ax.plot(segs2[:,[0,2]].T, segs2[:,[1,3]].T, c='gray', linewidth=0.5)
-                         
-  
-
+        # concatenate the manual and parametrized segs
+        segs = np.vstack((segs, mansegs))
+        return segs                       
 
     def plot_limiter(self, ax):
         rl = [1.26900, 1.26900, 1.26400, 1.43320, 1.38590, 1.38510, 1.29490, 1.32000, 1.44070, 1.44070, 1.50930, 1.57080, 1.57000, 1.72000, 1.72000, 1.84000, 1.84000, 1.69500, 1.65850, 1.65750, 1.64490, 1.84000, 2.03000, 2.03003, 2.08782, 2.13957, 2.18574, 2.22676, 2.26302, 2.30393, 2.33804, 2.36602, 2.38980, 2.40771, 2.42020, 2.42757, 2.43000, 2.42757, 2.42020, 2.40771, 2.38980, 2.36602, 2.33804, 2.30393, 2.26302, 2.22676, 2.18574, 2.13957, 2.08782, 2.03003, 2.03000, 1.84000, 1.64490, 1.65750, 1.65850, 1.69500, 1.84000, 1.84000, 1.72000, 1.72000, 1.57000, 1.57080, 1.50930, 1.44070, 1.44070, 1.32000, 1.29490, 1.38510, 1.38590, 1.43320, 1.26400, 1.26900, 1.26900]
@@ -233,7 +228,7 @@ class App:
                                 bd=5, 
                                 width=10, 
                                 textvariable=self.shape_params[key])                
-            entry.bind('<Return>', self.plot_new_bry)                                    
+            entry.bind('<Return>', self.update_plots)                                    
             entry.grid(row=i, column=3)
 
     def add_shape_points_panel(self, parent):
@@ -288,7 +283,7 @@ class App:
                                 bd=5, 
                                 width=4, 
                                 textvariable=self.shape_params[rkey])                
-            entry.bind('<Return>', self.plot_new_bry)                                    
+            entry.bind('<Return>', self.update_plots)                                    
             entry.grid(row=i, column=2)
 
             label = tk.Label(shp_frame, text=zkey)
@@ -298,20 +293,39 @@ class App:
                                 bd=5, 
                                 width=4, 
                                 textvariable=self.shape_params[zkey])                
-            entry.bind('<Return>', self.plot_new_bry)                                    
+            entry.bind('<Return>', self.update_plots)                                    
             entry.grid(row=i, column=4)
 
-            
-    def plot_new_bry(self, event=None):
+    def seg_intersections(self, segs, rb, zb):
         """
-        METHOD: plot_new_bry
+        METHOD: seg_intersections
+        DESCRIPTION: find intersection of control segments and boundary                
+        """  
+        nsegs = segs.shape[0]
+        rcp = np.empty(nsegs)*np.nan
+        zcp = np.empty(nsegs)*np.nan
+        for i in range(segs.shape[0]):            
+            rseg = segs[i,[0,2]]
+            zseg = segs[i,[1,3]]
+            r_, z_ = intersection(rseg, zseg, rb, zb)
+            if r_.size != 0:
+                rcp[i] = r_[0]
+                zcp[i] = z_[0]
+
+        return rcp, zcp
+        
+    def update_plots(self, event=None):
+        """
+        METHOD: update_plots
         DESCRIPTION:                
         """        
         # convert values form Tk-formatted shape_params to a normal python dict
         s = self.tkdict2dict(self.shape_params)
 
         # create boundary shape from params
-        [rb, zb] = shape_create_deadstart(s)
+        rb, zb = shape_create_deadstart(s)
+        segs = self.get_segs()
+        rcp, zcp = self.seg_intersections(segs, rb, zb)
 
         # plot boundary shape
         for i in range(len(self.axs)):
@@ -325,18 +339,23 @@ class App:
             self.plot_limiter(ax)
             ax.plot(rb, zb, linewidth=1, color='red')   
             
+            # plot manually-defined (r,z) points
             for k in range(8):
                 rkey = 'r' + str(k+1)
                 zkey = 'z' + str(k+1)
                 ax.scatter(s[rkey], s[zkey], s=30, c='red', alpha=1, marker='d')
 
+            # plot x-points
             for k in range(4):
                 rkey = 'rx' + str(k+1)
                 zkey = 'zx' + str(k+1)
                 ax.scatter(s[rkey], s[zkey], s=50, c='red', alpha=1, marker='x')
+            
+            # plot segment control points
+            ax.scatter(rcp, zcp, s=10, c='blue', alpha=1, marker='.')
 
-            self.plot_segs(ax)
-
+            ax.plot(segs[:,[0,2]].T, segs[:,[1,3]].T, c='blue', alpha=0.3, linewidth=0.5)        
+            
         self.canvas.draw()                       
   
 
