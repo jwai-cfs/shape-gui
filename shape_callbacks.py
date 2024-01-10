@@ -145,8 +145,9 @@ def squareness(r1, z1, r2, z2, r, z):
     """
     A = r1 - r2
     B = z2 - z1
+    tol = (r2-r1)*1e-8
 
-    rellipse = np.linspace(r2, r1, 100)
+    rellipse = np.linspace(r2-tol, r1+tol, 100)
     zellipse = z1 + np.sign(B)*np.sqrt(B**2 - ((B/A)*(rellipse - r2))**2)
 
     rseg = np.array([r2,r1])
