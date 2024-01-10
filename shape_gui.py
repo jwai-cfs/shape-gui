@@ -205,15 +205,15 @@ class App:
         shp_frame.pack(side='left', anchor='nw', padx=10, pady=10)
             
         # initialize shape parameters
-        shape_keys = ['Z0','Rmax', 'Rmin','k','triu','tril','squo','squi','sqlo','sqli','c_xplo','c_xpup']
-        shape_key_labels = ['Zcenter', 'Rmax', 'Rmin', 'Elongation', 'Triangularity upper', 'Triangularity lower',
+        shape_keys = ['Zup', 'Zlo','Rout', 'Rin','triu','tril','squo','squi','sqlo','sqli','c_xplo','c_xpup']
+        shape_key_labels = ['Zup', 'Zlo', 'Rout', 'Rin', 'Triangularity upper', 'Triangularity lower',
                            'Squareness up/out', 'Squareness up/in', 'Squareness lo/out', 'Squareness lo/in', 'Xpt_coeff lower', 
                            'Xpt_coeff upper']
         
-        self.shape_params['Z0']   = tk.StringVar(value='0.0')
-        self.shape_params['Rmax'] = tk.StringVar(value='2.4')
-        self.shape_params['Rmin'] = tk.StringVar(value='1.28')
-        self.shape_params['k']    = tk.StringVar(value='2.0314')
+        self.shape_params['Zup']   = tk.StringVar(value='1.14')
+        self.shape_params['Zlo']   = tk.StringVar(value='-1.14')
+        self.shape_params['Rout'] = tk.StringVar(value='2.4')
+        self.shape_params['Rin'] = tk.StringVar(value='1.28')
         self.shape_params['triu'] = tk.StringVar(value='0.59')
         self.shape_params['tril'] = tk.StringVar(value='0.59')
         self.shape_params['squo'] = tk.StringVar(value='-0.22')
@@ -249,9 +249,9 @@ class App:
         # Add entries for individual (r,z) points
         # x-points
         self.shape_params['rx1'] = tk.StringVar(value='1.513')
-        self.shape_params['zx1'] = tk.StringVar(value='1.144')
+        self.shape_params['zx1'] = tk.StringVar(value='1.14')
         self.shape_params['rx2'] = tk.StringVar(value='1.513')
-        self.shape_params['zx2'] = tk.StringVar(value='-1.144')
+        self.shape_params['zx2'] = tk.StringVar(value='-1.14')
         self.shape_params['rx3'] = tk.StringVar(value='nan')
         self.shape_params['zx3'] = tk.StringVar(value='nan')
         self.shape_params['rx4'] = tk.StringVar(value='nan')
@@ -351,8 +351,11 @@ class App:
         """        
         # convert values form Tk-formatted shape_params to a normal python dict
         s = self.tkdict2dict(self.shape_params)
-        s['a'] = (s['Rmax'] - s['Rmin']) / 2.0
-        s['R0'] = (s['Rmax'] + s['Rmin']) / 2.0
+        s['a']  = (s['Rout'] - s['Rin']) / 2.0
+        s['R0'] = (s['Rout'] + s['Rin']) / 2.0
+        s['b']  = (s['Zup'] - s['Zlo']) / 2.0
+        s['Z0'] = (s['Zup'] + s['Zlo']) / 2.0
+        s['k'] = s['b'] / s['a']
         
         # create boundary shape from params
         rb, zb = shape_create_deadstart(s)
