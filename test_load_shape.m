@@ -1,4 +1,4 @@
-fn = './shapes/shape1.json';
+fn = './shapes/shape0.json';
 s = load_json_dict(fn);
 
 

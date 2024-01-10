@@ -33,9 +33,8 @@ class App:
         notebook.add(tab2, text='tab2')
         notebook.pack(expand=1, fill='both')
 
-        # save shape button
-        B = tk.Button(tab1, text='Save Shape', command=self.save_shape)
-        B.pack(side='bottom', anchor='sw', padx=10, pady=10)
+        # fileio panel
+        self.add_fileio_panel(tab1)
         
         # add panels for shape parameter inputs
         self.shape_params = {}
@@ -52,6 +51,19 @@ class App:
 
         # plot shape
         self.update_plots()
+
+
+    # panel to hold fileio buttons
+    def add_fileio_panel(self, parent):
+
+        panel = tk.LabelFrame(parent, bd=0)
+        panel.pack(side='bottom', anchor='sw', padx=10, pady=10)
+              
+        B = tk.Button(panel, text='Save Shape', command=self.save_shape)
+        B.pack(side='left', anchor='sw', padx=10, pady=10)
+
+        B = tk.Button(panel, text='Load Shape', command=self.load_shape)
+        B.pack(side='left', anchor='sw', padx=10, pady=10)
 
 
     def add_plot_opts_panel(self, parent):
@@ -445,6 +457,22 @@ class App:
         
         json.dumps(d)
         f.write(json.dumps(d, indent=4))
+
+   
+    def load_shape(self, event=None):
+        filetypes=[("JSON files","*.json"), ("Text Documents","*.txt"), ("All Files","*.*")]
+        f = tk.filedialog.askopenfile(filetypes=filetypes)
+
+        s = json.load(f)
+        for key in s.keys():
+            try:                
+                strval = str(s[key])
+                self.shape_params[key].set(strval)
+            except:
+                pass
+
+        self.update_plots()
+
 
     def save_shape(self, event=None):
                 
