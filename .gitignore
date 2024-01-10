@@ -1,5 +1,9 @@
 **/backups*
 *.vscode
 *__pycache__*
-**/shapes*
+**/shapes/*
 *.asv
+
+
+# Exceptions
+!shape1.json
