@@ -460,7 +460,7 @@ class App:
 
    
     def load_shape(self, event=None):
-        
+
         filetypes=[("JSON files","*.json"), ("Text Documents","*.txt"), ("All Files","*.*")]
         f = tk.filedialog.askopenfile(filetypes=filetypes)
 
@@ -481,6 +481,7 @@ class App:
                 pass
        
         self.update_plots()
+        print('Shape loaded successfully.')  
 
 
     def save_shape(self, event=None):
@@ -509,7 +510,7 @@ class App:
         s['zl'] = self.zl
         
         self.save_file(s)      
-        print('shape saved to file')  
+        print('Shape saved to file successfully.')  
 
 def main():     
     app = App()
