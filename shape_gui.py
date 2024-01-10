@@ -460,6 +460,7 @@ class App:
 
    
     def load_shape(self, event=None):
+        
         filetypes=[("JSON files","*.json"), ("Text Documents","*.txt"), ("All Files","*.*")]
         f = tk.filedialog.askopenfile(filetypes=filetypes)
 
@@ -470,14 +471,23 @@ class App:
                 self.shape_params[key].set(strval)
             except:
                 pass
-
+        
+        seg_params = s['seg_params']
+        for key in seg_params.keys():
+            try:                
+                strval = str(seg_params[key])
+                self.seg_params[key].set(strval)
+            except:
+                pass
+       
         self.update_plots()
 
 
     def save_shape(self, event=None):
-                
+
         s = self.tkdict2dict(self.shape_params)         # convert values form Tk-formatted shape_params to a normal python dict    
         s = self.add_aux_geom_params(s)
+        s['seg_params'] = self.tkdict2dict(self.seg_params)
         rb, zb = shape_create_deadstart(s)              # create boundary shape from params
         segs = self.get_segs()                          # get control segments
         rcp, zcp = self.seg_intersections(segs, rb, zb) # get control points
