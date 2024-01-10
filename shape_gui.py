@@ -365,6 +365,15 @@ class App:
         y = (hs/2.4) - (h/2)    
         self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))              
 
+    # def add_aux_geom_params(self,s):
+    def add_aux_geom_params(self, s):
+        s['a']  = (s['Rout'] - s['Rin']) / 2.0
+        s['R0'] = (s['Rout'] + s['Rin']) / 2.0
+        s['b']  = (s['Zup'] - s['Zlo']) / 2.0
+        s['Z0'] = (s['Zup'] + s['Zlo']) / 2.0
+        s['k'] = s['b'] / s['a']
+        return s
+
     def update_plots(self, event=None):
         """
         METHOD: update_plots
@@ -372,11 +381,7 @@ class App:
         """        
         # convert values form Tk-formatted shape_params to a normal python dict
         s = self.tkdict2dict(self.shape_params)
-        s['a']  = (s['Rout'] - s['Rin']) / 2.0
-        s['R0'] = (s['Rout'] + s['Rin']) / 2.0
-        s['b']  = (s['Zup'] - s['Zlo']) / 2.0
-        s['Z0'] = (s['Zup'] + s['Zlo']) / 2.0
-        s['k'] = s['b'] / s['a']
+        s = self.add_aux_geom_params(s)
         
         # create boundary shape from params
         rb, zb = shape_create_deadstart(s)
@@ -444,6 +449,7 @@ class App:
     def save_shape(self, event=None):
                 
         s = self.tkdict2dict(self.shape_params)         # convert values form Tk-formatted shape_params to a normal python dict    
+        s = self.add_aux_geom_params(s)
         rb, zb = shape_create_deadstart(s)              # create boundary shape from params
         segs = self.get_segs()                          # get control segments
         rcp, zcp = self.seg_intersections(segs, rb, zb) # get control points
