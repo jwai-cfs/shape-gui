@@ -42,6 +42,8 @@ class App:
         self.add_shape_params_panel(tab1)
         self.add_shape_points_panel(tab1)
         self.add_segs_panel(tab1)
+        self.add_plot_opts_panel(tab1)
+
 
         # add plot axes
         plot_frame = tk.Frame(tab1)
@@ -50,6 +52,25 @@ class App:
 
         # plot shape
         self.update_plots()
+
+
+    def add_plot_opts_panel(self, parent):
+
+        # panel to hold plot options
+        panel = tk.LabelFrame(parent, text='Plot options', highlightbackground="gray", highlightthickness=2)
+        panel.pack(side='bottom', anchor='nw', padx=10, pady=10)
+
+        self.label_control_pts = tk.IntVar()                 
+        B = tk.Checkbutton(panel, text='label control points', variable = self.label_control_pts, command=self.update_plots)
+        B.pack(side='top', anchor='nw', padx=10, pady=0)
+        
+        self.label_manual_control_pts = tk.IntVar()                 
+        B = tk.Checkbutton(panel, text='label manual control points', variable = self.label_manual_control_pts, command=self.update_plots)
+        B.pack(side='top', anchor='nw', padx=10, pady=0)
+
+        self.label_xpts = tk.IntVar()                 
+        B = tk.Checkbutton(panel, text='label x-points', variable = self.label_xpts, command=self.update_plots)
+        B.pack(side='top', anchor='nw', padx=10, pady=0)
 
 
     def add_segs_panel(self, parent):
@@ -367,7 +388,7 @@ class App:
             ax = self.axs[i]
             
             # remove old lines
-            for artist in ax.lines + ax.collections:
+            for artist in ax.lines + ax.collections + ax.texts:
                 artist.remove()
             
             # plot limiter and new shape
@@ -390,6 +411,27 @@ class App:
             ax.scatter(rcp, zcp, s=15, c='blue', alpha=1, marker='.')
             ax.plot(segs[:,[0,2]].T, segs[:,[1,3]].T, c='blue', alpha=0.3, linewidth=0.5)        
             
+
+            # labels
+            if self.label_control_pts.get():
+                for i in range(len(rcp)):
+                    txt = str(i+1)
+                    ax.annotate(txt, (rcp[i], zcp[i]))
+            
+            if self.label_manual_control_pts.get():
+                for i in range(8):
+                    txt = str(i+1)
+                    rkey = 'r' + txt
+                    zkey = 'z' + txt
+                    ax.annotate(txt, (s[rkey], s[zkey]))
+
+            if self.label_xpts.get():
+                for i in range(4):
+                    txt = str(i+1)
+                    rkey = 'rx' + txt
+                    zkey = 'zx' + txt
+                    ax.annotate(txt, (s[rkey], s[zkey]))
+
         self.canvas.draw()                 
 
     def save_file(self, d):
