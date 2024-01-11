@@ -465,14 +465,16 @@ class App:
         f = tk.filedialog.askopenfile(filetypes=filetypes)
 
         s = json.load(f)
-        for key in s.keys():
+        shape_params = s['shape_params']
+        seg_params = s['seg_params']
+
+        for key in shape_params.keys():
             try:                
-                strval = str(s[key])
+                strval = str(shape_params[key])
                 self.shape_params[key].set(strval)
             except:
                 pass
-        
-        seg_params = s['seg_params']
+                
         for key in seg_params.keys():
             try:                
                 strval = str(seg_params[key])
@@ -486,30 +488,25 @@ class App:
 
     def save_shape(self, event=None):
 
-        s = self.tkdict2dict(self.shape_params)         # convert values form Tk-formatted shape_params to a normal python dict    
-        s = self.add_aux_geom_params(s)
-        s['seg_params'] = self.tkdict2dict(self.seg_params)
-        rb, zb = shape_create_deadstart(s)              # create boundary shape from params
-        segs = self.get_segs()                          # get control segments
-        rcp, zcp = self.seg_intersections(segs, rb, zb) # get control points
-
-        # # add manually-defined (r,z) points to (rcp,zcp)
-        # for k in range(8):
-        #     rkey = 'r' + str(k+1)
-        #     zkey = 'z' + str(k+1)
-        #     rcp = np.append(rcp, s[rkey])
-        #     zcp = np.append(zcp, s[zkey])
+        shape_params = self.tkdict2dict(self.shape_params)     # convert values form Tk-formatted shape_params to a normal python dict    
+        shape_params = self.add_aux_geom_params(shape_params)
+        seg_params = self.tkdict2dict(self.seg_params)
         
+        rb, zb = shape_create_deadstart(shape_params)          # create boundary shape from params
+        segs = self.get_segs()                                 # get control segments
+        rcp, zcp = self.seg_intersections(segs, rb, zb)        # get control points
+              
         # put everthing in dict        
-        s['rb'] = rb.tolist()
-        s['zb'] = zb.tolist()
-        s['segs'] = segs.tolist()
-        s['rcp'] = rcp.tolist()
-        s['zcp'] = zcp.tolist()
-        s['rl'] = self.rl
-        s['zl'] = self.zl
+        shape_params['rb'] = rb.tolist()
+        shape_params['zb'] = zb.tolist()
+        shape_params['segs'] = segs.tolist()
+        shape_params['rcp'] = rcp.tolist()
+        shape_params['zcp'] = zcp.tolist()
+        shape_params['rl'] = self.rl
+        shape_params['zl'] = self.zl
         
-        self.save_file(s)      
+        d = {'shape_params':shape_params, 'seg_params':seg_params}
+        self.save_file(d)      
         print('Shape saved to file successfully.')  
 
 def main():     
