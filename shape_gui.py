@@ -101,7 +101,7 @@ class App:
         self.seg_params['a']         = tk.StringVar(value='0.15')
         self.seg_params['b']         = tk.StringVar(value='0.2')
         self.seg_params['seglength'] = tk.StringVar(value='6')
-        self.seg_params['nsegs']     = tk.StringVar(value='40')
+        self.seg_params['nsegs']     = tk.StringVar(value='60')
         self.seg_params['theta0']    = tk.StringVar(value='0')
         
         # assign widgets for each segment parameter
@@ -447,7 +447,7 @@ class App:
                     txt = str(i+1)
                     rkey = 'rx' + txt
                     zkey = 'zx' + txt
-                    ax.annotate(txt, (s[rkey], s[zkey]))
+                    ax.annotate(txt, (s[rkey], s[zkey]))           
 
         self.canvas.draw()                 
 

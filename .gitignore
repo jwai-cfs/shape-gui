@@ -3,7 +3,7 @@
 *__pycache__*
 **/shapes/*
 *.asv
-
+*.DS_Store
 
 # Exceptions
 !shape1.json
